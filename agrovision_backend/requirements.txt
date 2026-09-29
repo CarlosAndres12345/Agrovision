@@ -1,18 +1,29 @@
 asgiref==3.11.1
+certifi==2026.7.22
+cffi==2.1.1
+cloudinary==1.45.0
+cryptography==50.0.0
+dj-database-url==3.1.2
 Django==6.0.4
 django-cors-headers==4.9.0
-psycopg2-binary==2.9.12
-dj-database-url==3.1.2
-gunicorn==26.2.0
-whitenoise==6.12.0
-sqlparse==0.5.5
-tzdata==2026.2
-cloudinary==1.45.0
-python-dotenv==1.2.2
-cryptography==50.0.0
-# numpy y Pillow: import a nivel de módulo en ml_models/utils/image_utils.py
-# (cargado por repository/api_views.py y metricas/api_views.py al arrancar
-# Django) — faltaban aquí y sin ellas el backend no levanta en absoluto en
-# un entorno nuevo, no solo el procesamiento con Mask R-CNN.
+filelock==3.29.1
+fsspec==2026.4.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+mpmath==1.3.0
+networkx==3.6.1
 numpy==2.4.6
+opencv-python==4.13.0.92
 pillow==12.2.0
+psycopg2-binary==2.9.12
+pycparser==3.0
+python-dotenv==1.2.2
+setuptools==81.0.0
+six==1.17.0
+sqlparse==0.5.5
+sympy==1.14.0
+torch==2.12.0
+torchvision==0.27.0
+typing_extensions==4.15.0
+tzdata==2026.2
+urllib3==2.7.0
