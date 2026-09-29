@@ -27,13 +27,17 @@ import type { Lote, LoteInput, LoteListResponse } from "../types/lote";
 import type { User, LoginResponse, RegisterResponse } from "../types/auth";
 import type { DashboardSummary } from "../types/dashboard";
 
-// IMPORTANTE: usar 'localhost' (no '127.0.0.1').
-// Django en localhost:8000 establece Set-Cookie con dominio 'localhost'.
-// El browser incluye esa cookie en requests a localhost:3000 (mismo dominio, distinto puerto).
-// Con 127.0.0.1, la cookie quedaría en otro dominio y el proxy.ts no la vería → bucle de login.
+// IMPORTANTE: en desarrollo, NEXT_PUBLIC_API_URL debe usar 'localhost' (no
+// '127.0.0.1'). Django en localhost:8000 establece Set-Cookie con dominio
+// 'localhost'. El browser incluye esa cookie en requests a localhost:3000
+// (mismo dominio, distinto puerto). Con 127.0.0.1, la cookie quedaría en
+// otro dominio y el proxy.ts no la vería → bucle de login.
+//
+// Única fuente de verdad para la URL del backend en todo el frontend — no
+// construyas otra variante en ningún otro archivo, importa BACKEND_BASE_URL
+// desde aquí (ver AnalisisForm.tsx y lib/geolocationApi.ts).
 export const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ??
-  process.env.BACKEND_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:8000";
 
 // ==================== AUTH USER (caché de UI) ====================
