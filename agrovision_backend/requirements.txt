@@ -2,8 +2,15 @@ asgiref==3.11.1
 Django==6.0.4
 django-cors-headers==4.9.0
 psycopg2-binary==2.9.12
+dj-database-url==3.1.2
 sqlparse==0.5.5
 tzdata==2026.2
 cloudinary==1.45.0
 python-dotenv==1.2.2
 cryptography==50.0.0
+# numpy y Pillow: import a nivel de módulo en ml_models/utils/image_utils.py
+# (cargado por repository/api_views.py y metricas/api_views.py al arrancar
+# Django) — faltaban aquí y sin ellas el backend no levanta en absoluto en
+# un entorno nuevo, no solo el procesamiento con Mask R-CNN.
+numpy==2.4.6
+pillow==12.2.0

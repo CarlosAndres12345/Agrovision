@@ -28,6 +28,7 @@ runs/
 # Django local
 agrovision_backend/db.sqlite3
 agrovision_backend/media/
+agrovision_backend/staticfiles/
 
 # Python cache
 __pycache__/

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from ml_models.services.inference import procesar_imagenes, InferenceError
+from ml_models.services.model_loader import ModeloNoDisponibleError
 from ml_models.services.metrics import formatear_para_respuesta
 from ml_models.utils.config import DEFAULT_MODEL_PATH, EXTENSIONES_VALIDAS
 from ml_models.utils.image_utils import leer_desde_bytes, redimensionar, normalizar, validar_extension
@@ -72,6 +73,13 @@ def process_images(
 
     try:
         resultados = procesar_imagenes(list(archivos))
+    except ModeloNoDisponibleError as exc:
+        # No hay checkpoint físico en este entorno (p. ej. no se sube al
+        # desplegar por su tamaño) — nunca se simula un resultado: se informa
+        # con un mensaje claro y se corta el flujo aquí.
+        raise ProcesamientoError(
+            "El modelo de visión computacional no está disponible en este entorno."
+        ) from exc
     except InferenceError as exc:
         raise ProcesamientoError(f"Error en inferencia: {exc}") from exc
 
