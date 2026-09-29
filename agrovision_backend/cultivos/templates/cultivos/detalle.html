@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cultivo.nombre }} | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ cultivo.nombre }}</h1>
+    <p><strong>Tipo de fruto:</strong> {{ cultivo.tipo_fruto }}</p>
+    <p><strong>Ubicación:</strong> {{ cultivo.ubicacion }}</p>
+    <p><strong>Área sembrada:</strong> {{ cultivo.area_sembrada }}</p>
+    <p><strong>Fecha siembra:</strong> {{ cultivo.fecha_siembra }}</p>
+    <p><strong>Usuario:</strong> {{ cultivo.usuario.username }}</p>
+    {% if cultivo.descripcion %}
+        <p><strong>Descripción:</strong> {{ cultivo.descripcion }}</p>
+    {% endif %}
+    <div class="actions">
+        <a href="{% url 'lotes:lista_por_cultivo' cultivo.id %}">Ver lotes</a>
+        <a href="{% url 'metricas:lista_por_cultivo' cultivo.id %}">Ver métricas</a>
+        <a href="{% url 'cultivos:lista' %}">Volver a cultivos</a>
+    </div>
+</section>
+{% endblock %}

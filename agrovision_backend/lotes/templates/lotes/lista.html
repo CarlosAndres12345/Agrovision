@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Lotes de {{ cultivo.nombre }} | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Lotes del cultivo: {{ cultivo.nombre }}</h1>
+    <p><a href="{% url 'cultivos:detalle' cultivo.id %}">Volver al detalle del cultivo</a></p>
+    {% if lotes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Área lote</th>
+                    <th>Descripción</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lote in lotes %}
+                <tr>
+                    <td>{{ lote.nombre }}</td>
+                    <td>{{ lote.area_lote }}</td>
+                    <td>{{ lote.descripcion|default:'Sin descripción' }}</td>
+                    <td><a href="{% url 'lotes:detalle' lote.id %}">Ver detalle</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">Este cultivo todavía no tiene lotes registrados.</p>
+    {% endif %}
+</section>
+{% endblock %}

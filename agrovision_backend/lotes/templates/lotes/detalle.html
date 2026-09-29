@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lote.nombre }} | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ lote.nombre }}</h1>
+    <p><strong>Cultivo:</strong> {{ cultivo.nombre }}</p>
+    <p><strong>Tipo de fruto:</strong> {{ cultivo.tipo_fruto }}</p>
+    <p><strong>Área del lote:</strong> {{ lote.area_lote }}</p>
+    <p><strong>Descripción:</strong> {{ lote.descripcion|default:'Sin descripción' }}</p>
+
+    <div class="actions">
+        <a href="{% url 'cultivos:detalle' cultivo.id %}">Volver al detalle del cultivo</a>
+        <a href="{% url 'lotes:lista_por_cultivo' cultivo.id %}">Volver a la lista de lotes</a>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Métricas del lote</h2>
+    {% if metricas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo resultado</th>
+                    <th>Valor</th>
+                    <th>Unidad</th>
+                    <th>Fecha registro</th>
+                    <th>Fuente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metrica in metricas %}
+                <tr>
+                    <td>{{ metrica.tipo_resultado }}</td>
+                    <td>{{ metrica.valor }}</td>
+                    <td>{{ metrica.unidad|default:'-' }}</td>
+                    <td>{{ metrica.fecha_registro }}</td>
+                    <td>{{ metrica.fuente }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No hay métricas asociadas a este lote.</p>
+    {% endif %}
+</section>
+{% endblock %}

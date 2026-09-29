@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Métricas de {{ cultivo.nombre }} | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Métricas del cultivo: {{ cultivo.nombre }}</h1>
+    <p><a href="{% url 'cultivos:detalle' cultivo.id %}">Volver al detalle del cultivo</a></p>
+    {% if metricas %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo resultado</th>
+                    <th>Valor</th>
+                    <th>Unidad</th>
+                    <th>Fecha registro</th>
+                    <th>Fuente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metrica in metricas %}
+                <tr>
+                    <td>{{ metrica.tipo_resultado }}</td>
+                    <td>{{ metrica.valor }}</td>
+                    <td>{{ metrica.unidad|default:'-' }}</td>
+                    <td>{{ metrica.fecha_registro }}</td>
+                    <td>{{ metrica.fuente }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">Este cultivo todavía no tiene métricas registradas.</p>
+    {% endif %}
+</section>
+{% endblock %}

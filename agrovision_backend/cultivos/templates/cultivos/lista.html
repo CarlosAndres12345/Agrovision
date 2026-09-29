@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Cultivos | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Cultivos</h1>
+    {% if cultivos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo de fruto</th>
+                    <th>Usuario</th>
+                    <th>Área sembrada</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cultivo in cultivos %}
+                <tr>
+                    <td>{{ cultivo.nombre }}</td>
+                    <td>{{ cultivo.tipo_fruto }}</td>
+                    <td>{{ cultivo.usuario.username }}</td>
+                    <td>{{ cultivo.area_sembrada }}</td>
+                    <td><a href="{% url 'cultivos:detalle' cultivo.id %}">Ver detalle</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">No hay cultivos registrados.</p>
+    {% endif %}
+</section>
+{% endblock %}

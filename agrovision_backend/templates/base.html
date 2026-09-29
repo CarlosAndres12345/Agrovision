@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Agrovision{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            color: #1f2937;
+            background: #f5f7fa;
+        }
+        header {
+            background: #14532d;
+            color: white;
+            padding: 1rem 1.5rem;
+        }
+        nav a {
+            color: white;
+            margin-right: 1rem;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background: #e2e8f0;
+        }
+        .empty {
+            padding: 1rem;
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            border-radius: 8px;
+        }
+        .actions a {
+            display: inline-block;
+            margin-right: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{% url 'home' %}">Inicio</a>
+            <a href="{% url 'cultivos:lista' %}">Cultivos</a>
+            {% if request.user.is_staff %}
+                <a href="/admin/">Admin</a>
+            {% endif %}
+            {% if request.user.is_authenticated %}
+                <span style="margin-left:1rem;color:#f3f4f6">|</span>
+                <span style="margin-left:0.5rem; color: #fff; font-weight:600">{{ request.user.username }}</span>
+                <a style="margin-left:0.75rem; color: white;" href="{% url 'logout' %}">Cerrar sesión</a>
+            {% else %}
+                <a style="margin-left:0.75rem; color: white;" href="{% url 'login' %}">Iniciar sesión</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

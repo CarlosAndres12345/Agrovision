@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio | Agrovision{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Agrovision</h1>
+    <p>Monitoreo de cultivos mediante visión computacional: consulta cultivos, lotes y métricas de madurez.</p>
+    <div class="actions">
+        <a href="{% url 'cultivos:lista' %}">Ver cultivos</a>
+        {% if request.user.is_staff %}
+            <a href="/admin/">Ir al admin</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
