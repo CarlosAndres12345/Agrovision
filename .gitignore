@@ -25,3 +25,11 @@ node_modules/
 datasets/
 runs/
 
+# Django local
+agrovision_backend/db.sqlite3
+agrovision_backend/media/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
