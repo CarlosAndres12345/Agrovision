@@ -46,24 +46,22 @@ if not SECRET_KEY:
         )
 
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "testserver",  # requerido por el test client de Django (manage.py test)
-    ".vercel.app",  # subdominios de Vercel (preview y producción)
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver"
+    ).split(",")
+    if host.strip()
 ]
+
+# Subdominios de Vercel (preview y producción) — Django trata un valor con
+# punto inicial como comodín de subdominio.
+ALLOWED_HOSTS.append(".vercel.app")
 
 # Vercel expone la URL del despliegue actual sin esquema (p. ej.
 # "mi-app.vercel.app") en VERCEL_URL — se agrega tal cual si está presente.
 _vercel_url = os.environ.get("VERCEL_URL")
 if _vercel_url:
     ALLOWED_HOSTS.append(_vercel_url.replace("https://", "").replace("http://", ""))
-
-# Hosts adicionales opcionales (dominio propio, etc.), coma-separados.
-ALLOWED_HOSTS += [
-    host.strip()
-    for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
-    if host.strip()
-]
 
 
 # Application definition
@@ -89,6 +87,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # sirve estáticos en producción sin depender del hosting
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -122,10 +121,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 #
 # Dos escenarios, nunca mezclados:
-# - DATABASE_URL presente (Vercel/producción) -> tiene prioridad, vía
-#   dj-database-url.
-# - DATABASE_URL ausente (desarrollo local) -> variables DB_NAME/DB_USER/
-#   DB_PASSWORD/DB_HOST/DB_PORT, con validación explícita si falta alguna.
+# - DATABASE_URL presente (producción) -> tiene prioridad, vía dj-database-url.
+# - DATABASE_URL ausente (desarrollo local) -> variables POSTGRES_DB/
+#   POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_HOST/POSTGRES_PORT, con
+#   validación explícita si falta alguna. Nunca cae a SQLite en silencio.
 
 _database_url = os.environ.get("DATABASE_URL")
 
@@ -140,7 +139,7 @@ if _database_url:
         )
     }
 else:
-    _required_db_vars = ["DB_NAME", "DB_USER", "DB_PASSWORD"]
+    _required_db_vars = ["POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD"]
     _missing_db_vars = [var for var in _required_db_vars if not os.environ.get(var)]
     if _missing_db_vars:
         raise ImproperlyConfigured(
@@ -152,11 +151,11 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ.get("DB_NAME"),
-            "USER": os.environ.get("DB_USER"),
-            "PASSWORD": os.environ.get("DB_PASSWORD"),
-            "HOST": os.environ.get("DB_HOST", "localhost"),
-            "PORT": os.environ.get("DB_PORT", "5432"),
+            "NAME": os.environ.get("POSTGRES_DB"),
+            "USER": os.environ.get("POSTGRES_USER"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
         }
     }
 
@@ -196,7 +195,18 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # collectstatic — necesario para servir estáticos en producción/Vercel
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # collectstatic — necesario para servir estáticos en producción
+
+# WhiteNoise + almacenamiento con hash/compresión para cache-busting seguro.
+# Storage único para Django 6 (reemplaza el viejo STATICFILES_STORAGE).
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Nota: MEDIA_ROOT es solo un directorio local (útil en desarrollo); el
 # repositorio real de imágenes agrícolas es Cloudinary (ver app 'repository')
@@ -207,14 +217,21 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 ML_CHECKPOINTS_DIR = BASE_DIR / 'ml_models' / 'checkpoints'
 
-# CORS — orígenes del frontend permitidos para llamar a la API.
+# CORS — orígenes del frontend permitidos para llamar a la API. En producción,
+# reemplaza la variable de entorno completa por la URL real (ver .env.example).
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
 ]
 
+# Extra de conveniencia: si defines FRONTEND_URL (por ejemplo porque todavía
+# no quieres reescribir la lista completa de CORS_ALLOWED_ORIGINS), se agrega
+# igual sin tener que repetirla en dos variables distintas.
 _frontend_url = os.environ.get("FRONTEND_URL")
-if _frontend_url:
+if _frontend_url and _frontend_url.rstrip("/") not in CORS_ALLOWED_ORIGINS:
     CORS_ALLOWED_ORIGINS.append(_frontend_url.rstrip("/"))
 
 # El login usa sesión Django (cookie 'sessionid'), no tokens — las
@@ -228,14 +245,19 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Sesión Django
 SESSION_COOKIE_HTTPONLY = True  # La cookie no es accesible desde JavaScript
-# "Lax" es correcto mientras frontend y backend compartan registrable domain
-# (p. ej. ambos en localhost, o ambos bajo el mismo dominio propio en
-# producción). Si terminan en dominios *distintos* de vercel.app (dos
-# proyectos Vercel separados sin dominio propio compartido), un login
-# cross-site requerirá SESSION_COOKIE_SAMESITE=None — decisión explícita a
-# tomar según la topología real de despliegue, no algo para cambiar aquí sin
-# confirmarlo primero (ver informe de despliegue).
-SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
+
+# SameSite: la autenticación actual es 100% por cookie de sesión (no hay
+# tokens), y este proyecto despliega frontend y backend como dos servicios
+# *separados* (dominios/subdominios distintos) — eso es cross-site para el
+# navegador. "Lax" (el default de Django) NO se envía en esas requests
+# cross-origin, así que el login quedaría roto en producción si se dejara
+# fijo. En local, frontend y backend comparten "localhost" (incluida cookie
+# SameSite=Lax entre puertos), así que ahí "Lax" sigue funcionando sin tocar
+# nada. Por eso la decisión es condicional a DEBUG, no un valor fijo:
+SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+CSRF_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+# SameSite=None exige Secure=True (si no, el navegador descarta la cookie) —
+# ya es así, porque estas dos ya son not DEBUG independientemente de lo anterior.
 SESSION_COOKIE_SECURE = not DEBUG  # HTTPS obligatorio para la cookie fuera de desarrollo
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 días en segundos
 
@@ -244,20 +266,29 @@ CSRF_COOKIE_SECURE = not DEBUG
 # CSRF — orígenes de confianza para requests cross-origin con credenciales.
 # A diferencia de CORS_ALLOWED_ORIGINS, Django exige esquema (http/https).
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origin.strip()
+    for origin in os.environ.get(
+        "CSRF_TRUSTED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
 ]
-if _frontend_url:
+if _frontend_url and _frontend_url.rstrip("/") not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append(_frontend_url.rstrip("/"))
 
 _backend_url = os.environ.get("BACKEND_URL")
-if _backend_url:
+if _backend_url and _backend_url.rstrip("/") not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append(_backend_url.rstrip("/"))
 
-# Necesario detrás del proxy HTTPS de Vercel: sin esto, Django no reconoce
-# que el request original llegó por HTTPS y las cookies "Secure" nunca se
-# devuelven en producción.
+# Necesario detrás de un proxy HTTPS (Vercel, Railway, Render, etc.): sin
+# esto, Django no reconoce que el request original llegó por HTTPS y las
+# cookies "Secure" nunca se devuelven en producción.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Redirección forzada a HTTPS — apagada por defecto porque muchos hostings
+# (incluido Vercel) ya la manejan en su propio proxy/edge; actívala solo si
+# tu hosting específico no lo hace y confirmas que no genera loops de
+# redirección con el proxy.
+SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "False").lower() == "true"
 
 # Cloudinary — repositorio externo de imágenes (ver app 'repository').
 # Las claves viven únicamente aquí (backend); nunca se exponen al frontend.
