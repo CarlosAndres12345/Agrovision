@@ -1,0 +1,27 @@
+# Modelos entrenados
+agrovision_backend/ml_models/checkpoints/*.pt
+agrovision_backend/ml_models/checkpoints/*.pth
+agrovision_backend/ml_models/checkpoints/*.ckpt
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Django
+*.log
+
+# Next.js / Node
+node_modules/
+.next/
+
+# Entrenamiento
+datasets/
+runs/
+
