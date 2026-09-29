@@ -13,7 +13,7 @@ function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     // Errores de red
     if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
-      return "No se puede conectar al servidor. Verifica que el backend está corriendo en http://localhost:8000";
+      return "No se pudo establecer conexión con el servidor. Intenta nuevamente.";
     }
     return error.message;
   }

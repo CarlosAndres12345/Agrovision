@@ -27,18 +27,29 @@ import type { Lote, LoteInput, LoteListResponse } from "../types/lote";
 import type { User, LoginResponse, RegisterResponse } from "../types/auth";
 import type { DashboardSummary } from "../types/dashboard";
 
-// IMPORTANTE: en desarrollo, NEXT_PUBLIC_API_URL debe usar 'localhost' (no
-// '127.0.0.1'). Django en localhost:8000 establece Set-Cookie con dominio
-// 'localhost'. El browser incluye esa cookie en requests a localhost:3000
-// (mismo dominio, distinto puerto). Con 127.0.0.1, la cookie quedaría en
-// otro dominio y el proxy.ts no la vería → bucle de login.
+// IMPORTANTE: en desarrollo local, NEXT_PUBLIC_API_URL debe usar 'localhost'
+// (no '127.0.0.1'). Django en localhost:8000 establece Set-Cookie con
+// dominio 'localhost'. El browser incluye esa cookie en requests a
+// localhost:3000 (mismo dominio, distinto puerto). Con 127.0.0.1, la cookie
+// quedaría en otro dominio y el proxy.ts no la vería → bucle de login.
 //
 // Única fuente de verdad para la URL del backend en todo el frontend — no
 // construyas otra variante en ningún otro archivo, importa BACKEND_BASE_URL
 // desde aquí (ver AnalisisForm.tsx y lib/geolocationApi.ts).
+//
+// El fallback a "http://localhost:8000" es SOLO para NODE_ENV=development
+// (nadie tiene un backend corriendo en localhost en producción). Fuera de
+// desarrollo, si NEXT_PUBLIC_API_URL no llegó a configurarse, se prefiere
+// fallar de forma explícita en el build/arranque a que el frontend intente
+// silenciosamente hablar con localhost:8000 en producción.
+const _envApiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "");
+
 export const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:8000";
+  _envApiUrl || (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
+
+if (!BACKEND_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL no está configurada para este entorno.");
+}
 
 // ==================== AUTH USER (caché de UI) ====================
 // La fuente de verdad es la sesión Django (cookie 'sessionid').
